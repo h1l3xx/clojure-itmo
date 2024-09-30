@@ -1,8 +1,7 @@
 (ns problems_test
   (:require [clojure.test :refer [deftest is]]
             [prob10.modular :as problem-10-modular]
-            [prob10.lazy :as problem-10-lazy]
-            ))
+            [prob10.lazy :as problem-10-lazy]))
 
 (deftest test-problem-10-modular-solve
   (is (= (problem-10-modular/solve 2000000) 142913828922)))
