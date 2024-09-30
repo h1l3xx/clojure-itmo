@@ -1,4 +1,5 @@
 (ns prob10.lazy)
+
 (def primes
   (remove
     (fn [x]
