@@ -1,4 +1,4 @@
-(ns problems_test
+(ns problems-test
   (:require [clojure.test :refer [deftest is]]
             [prob10.modular :as problem-10-modular]
             [prob10.lazy :as problem-10-lazy]))
