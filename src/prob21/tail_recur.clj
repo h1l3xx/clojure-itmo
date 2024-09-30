@@ -1,4 +1,4 @@
-(ns prob21.tail_recur)
+(ns prob21.tail-recur)
 
 (defn sum-of-divisors [n]
   (loop [i 1 acc 0]
