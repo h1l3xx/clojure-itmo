@@ -7,4 +7,4 @@
     (iterate inc 2)))
 
 (defn solve [n]
-  (reduce + (take-while #(<= % n) primes)))
+  (apply + (take-while #(<= % n) primes)))
