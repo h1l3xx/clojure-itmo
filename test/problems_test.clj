@@ -6,12 +6,18 @@
             [prob21.loop :as problem-21-loop]
             [prob21.map :as problem-21-map]))
 
-(deftest test-problem-10-modular-solve
+(deftest test-problem-10-modular-solve-1
   (is (= (problem-10-modular/solve 2000000) 142913828922)))
-(deftest test-problem-10-lazy-solve
+(deftest test-problem-10-modular-solve-2
+  (is (= (problem-10-modular/solve 10) 17)))
+(deftest test-problem-10-lazy-solve-1
   (is (= (problem-10-lazy/solve 2000000) 142913828922)))
-(deftest test-problem-10-tail-solve
+(deftest test-problem-10-lazy-solve-2
+  (is (= (problem-10-lazy/solve 10) 17)))
+(deftest test-problem-10-tail-solve-1
   (is (= (problem-10-tail/solve 2000000) 142913828922)))
+(deftest test-problem-10-tail-solve-2
+  (is (= (problem-10-tail/solve 10) 17)))
 (deftest test-problem-21-loop-solve
   (is (= (problem-21-loop/solve 10000) 31626)))
 (deftest test-problem-21-map-solve
