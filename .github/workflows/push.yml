@@ -24,8 +24,8 @@ jobs:
           clj-kondo: latest
           cljfmt: latest
 
-#      - name: Check format
-#        run: cljfmt check
+      - name: Check format
+        run: cljfmt fix
 
       - name: Lint
         run: clj-kondo --lint src
