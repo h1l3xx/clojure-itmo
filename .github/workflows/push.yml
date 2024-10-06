@@ -27,8 +27,8 @@ jobs:
       - name: Check format
         run: cljfmt fix
 
-      - name: Lint
-        run: clj-kondo --lint src
+      - name: Lint lab1
+        run: clj-kondo --lint lab1/src
 
       - name: Test
         run: clojure -X:test
