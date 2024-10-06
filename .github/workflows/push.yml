@@ -31,4 +31,6 @@ jobs:
         run: clj-kondo --lint lab1/src
 
       - name: Test Lab1
-        run: clojure -X:test
+        run: |
+          cd lab2
+          clojure -X:test
