@@ -32,5 +32,5 @@ jobs:
 
       - name: Test Lab1
         run: |
-          cd lab2
+          cd lab1
           clojure -X:test
