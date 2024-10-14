@@ -74,3 +74,28 @@
               (concat current-word children-words)))]
     (collect-words trie "")))
 
+(defn merge-tries [trie1 trie2]
+  (letfn [(merge-nodes [node1 node2]
+            ;; Сливаем флаги конца слова
+            (let [is-end (or (:is-end node1) (:is-end node2))
+                  ;; Сливаем дочерние узлы
+                  merged-children (merge-with merge-nodes
+                                              (:children node1 {})
+                                              (:children node2 {}))]
+              {:is-end is-end :children merged-children}))]
+    (merge-nodes trie1 trie2)))
+
+
+(defn tries-equal?  [trie1 trie2]
+  (letfn [(compare-nodes [node1 node2]
+            ;; Проверяем флаг конца слова
+            (and (= (:is-end node1) (:is-end node2))
+                 ;; Проверяем, что дочерние узлы одинаковы
+                 (= (set (keys (:children node1)))
+                    (set (keys (:children node2))))
+                 ;; Рекурсивно сравниваем дочерние узлы
+                 (every? (fn [char]
+                           (compare-nodes (get (:children node1) char)
+                                          (get (:children node2) char)))
+                         (keys (:children node1)))))]
+    (compare-nodes trie1 trie2)))
