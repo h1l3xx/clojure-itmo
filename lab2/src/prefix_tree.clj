@@ -1,101 +1,68 @@
-(ns prefix_tree)
+(ns prefix-tree)
 
 (defn create-node []
   {:is-end false :children {}})
 
-(defn insert-word [trie word]
-  (letfn [(insert-char [node chars]
-            (if (empty? chars)
-              (assoc node :is-end true)
-              (let [c (first chars)
-                    next-node (get-in node [:children c] (create-node))]
-                (assoc-in node [:children c] (insert-char next-node (rest chars))))))]
-    (insert-char trie word)))
+(defprotocol IDictionary
+  (insert [this key] "Добавить ключ в словарь")
+  (lookup [this key] "Проверить, существует ли ключ в словаре")
+  (delete [this key] "Удалить ключ из словаря")
+  (trie-keys [this] "Вернуть все ключи")
+  (entries [this] "Вернуть все пары ключ-флаг"))
 
-(defn remove-word [trie word]
-  (letfn [(remove-char [node chars]
-            (if (empty? chars)
-              (if (:is-end node)
-                (assoc node :is-end false)
-                node)
-              (let [c (first chars)
-                    next-node (get-in node [:children c])]
-                (if next-node
-                  (let [updated-node (remove-char next-node (rest chars))]
-                    (if (and (empty? (:children updated-node))
-                             (not (:is-end updated-node)))
-                      (update node :children dissoc c)
-                      (assoc-in node [:children c] updated-node)))
-                  node))))]
-    (remove-char trie word)))
+(deftype PrefixTreeDictionary [root]
+  IDictionary
+  ;; Вставка ключа в префиксное дерево
+  (insert [this key]
+    (letfn [(insert-seq [node chars]
+              (if (empty? chars)
+                (assoc node :is-end true)  ;; Устанавливаем флаг конца слова
+                (let [c (first chars)
+                      next-node (get-in node [:children c] (create-node))]
+                  (assoc-in node [:children c] (insert-seq next-node (rest chars))))))]
+      (PrefixTreeDictionary. (insert-seq root key))))
 
-(defn search-word [trie word]
-  (letfn [(search-char [node chars]
-            (cond
-              (nil? node) false
-              (empty? chars) (:is-end node)
-              :else (recur (get-in node [:children (first chars)]) (rest chars))))]
-    (search-char trie word)))
+  ;; Проверка наличия ключа в префиксном дереве
+  (lookup [this key]
+    (letfn [(lookup-seq [node chars]
+              (if (empty? chars)
+                (:is-end node)  ;; Возвращаем флаг окончания слова
+                (let [next-node (get-in node [:children (first chars)])]
+                  (when next-node
+                    (lookup-seq next-node (rest chars))))))]
+      (lookup-seq root key)))
 
-(defn search-prefix [trie prefix]
-  (letfn [(search-prefix [node chars]
-            (cond
-              (nil? node) false
-              (empty? chars) true
-              :else (recur (get-in node [:children (first chars)]) (rest chars))))]
-    (search-prefix trie prefix)))
+  ;; Удаление ключа из префиксного дерева
+  (delete [this key]
+    (letfn [(remove-seq [node chars]
+              (if (empty? chars)
+                (assoc node :is-end false)  ;; Убираем флаг конца слова
+                (let [c (first chars)
+                      next-node (get-in node [:children c])]
+                  (when next-node
+                    (let [updated-node (remove-seq next-node (rest chars))]
+                      (if (and (not (:is-end updated-node))
+                               (empty? (:children updated-node)))
+                        (update node :children dissoc c)  ;; Удаляем узел, если он пуст
+                        (assoc-in node [:children c] updated-node)))))))]
+      (PrefixTreeDictionary. (remove-seq root key))))
 
-(defn filter-trie [trie pred]
-  (letfn [(filter-node [node prefix]
-            ;; Проверяем текущий узел
-            (let [filtered-children
-                  (into {} (for [[char child] (:children node)
-                                 :let [filtered-child (filter-node child (str prefix char))]
-                                 :when (or (:is-end filtered-child)
-                                           (not (empty? (:children filtered-child))))]
-                             [char filtered-child]))]
-              ;; Возвращаем обновленный узел, если он содержит соответствующее слово
-              (if (and (:is-end node) (pred prefix))
-                ;; Сохраняем узел, если слово удовлетворяет предикату
-                {:is-end true :children filtered-children}
-                ;; Если узел не является концом нужного слова, просто возвращаем его детей
-                {:is-end false :children filtered-children})))]
-    (filter-node trie "")))
+  ;; Получение всех ключей
+  (trie-keys [this]
+    (letfn [(collect-keys [node prefix]
+              (let [current-keys (if (:is-end node) [prefix] [])
+                    children-keys (mapcat (fn [[char child]]
+                                            (collect-keys child (conj prefix char)))
+                                          (:children node))]
+                (concat current-keys children-keys)))]
+      (collect-keys root [])))
 
-(defn build-trie  [words]
-  (reduce insert-word (create-node) words))
-
-(defn trie-to-words [trie]
-  (letfn [(collect-words [node prefix]
-            (let [current-word (if (:is-end node) [prefix] [])
-                  children-words (mapcat (fn [[char child]]
-                                           (collect-words child (str prefix char)))
-                                         (:children node))]
-              (concat current-word children-words)))]
-    (collect-words trie "")))
-
-(defn merge-tries [trie1 trie2]
-  (letfn [(merge-nodes [node1 node2]
-            ;; Сливаем флаги конца слова
-            (let [is-end (or (:is-end node1) (:is-end node2))
-                  ;; Сливаем дочерние узлы
-                  merged-children (merge-with merge-nodes
-                                              (:children node1 {})
-                                              (:children node2 {}))]
-              {:is-end is-end :children merged-children}))]
-    (merge-nodes trie1 trie2)))
-
-
-(defn tries-equal?  [trie1 trie2]
-  (letfn [(compare-nodes [node1 node2]
-            ;; Проверяем флаг конца слова
-            (and (= (:is-end node1) (:is-end node2))
-                 ;; Проверяем, что дочерние узлы одинаковы
-                 (= (set (keys (:children node1)))
-                    (set (keys (:children node2))))
-                 ;; Рекурсивно сравниваем дочерние узлы
-                 (every? (fn [char]
-                           (compare-nodes (get (:children node1) char)
-                                          (get (:children node2) char)))
-                         (keys (:children node1)))))]
-    (compare-nodes trie1 trie2)))
+  ;; Получение всех пар ключ-флаг
+  (entries [this]
+    (letfn [(collect-entries [node prefix]
+              (let [current-entry (if (:is-end node) [[prefix true]] [])
+                    children-entries (mapcat (fn [[char child]]
+                                               (collect-entries child (conj prefix char)))
+                                             (:children node))]
+                (concat current-entry children-entries)))]
+      (collect-entries root []))))
