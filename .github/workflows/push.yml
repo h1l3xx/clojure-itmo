@@ -28,9 +28,9 @@ jobs:
         run: cljfmt fix
 
       - name: Lint lab1
-        run: clj-kondo --lint lab1/src
+        run: clj-kondo --lint lab2/src
 
       - name: Test Lab1
         run: |
-          cd lab1
+          cd lab2
           clojure -X:test
