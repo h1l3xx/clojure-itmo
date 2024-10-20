@@ -25,7 +25,7 @@ jobs:
           cljfmt: latest
 
       - name: Check format
-        run: cljfmt fix
+        run: cljfmt check
 
       - name: Lint lab2
         run: clj-kondo --lint lab2/src

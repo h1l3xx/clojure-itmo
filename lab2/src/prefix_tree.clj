@@ -5,57 +5,54 @@
 
 (defprotocol IDictionary
   (insert [this key] "Добавить ключ в словарь")
-  (lookup [this key] "Проверить, существует ли ключ в словаре")
+  (search [this key] "Проверить, существует ли ключ в словаре")
   (delete [this key] "Удалить ключ из словаря")
   (trie-keys [this] "Вернуть все ключи")
   (entries [this] "Вернуть все пары ключ-флаг")
   (merge-tries [this other] "Объединить два префиксных дерева")
   (left [this] "Левый обход (снизу вверх)")
-  (right [this] "Правый обход (сверху вниз)"))
+  (right [this] "Правый обход (сверху вниз)")
+  (compare-tries [this other] "Сравнение двух деревьев"))
 
 (deftype PrefixTreeDictionary [root]
   IDictionary
-  ;; Вставка ключа в префиксное дерево
   (insert [_ key]
     (letfn [(insert-seq [node elems]
               (if (empty? elems)
-                (assoc node :is-end true)  ;; Устанавливаем флаг конца ключа
+                (assoc node :is-end true)
                 (let [elem (first elems)
                       next-node (get-in node [:children elem] (create-node))]
                   (assoc-in node [:children elem] (insert-seq next-node (rest elems))))))]
       (PrefixTreeDictionary. (insert-seq root key))))
 
-  ;; Проверка наличия ключа в префиксное дерево
-  (lookup [_ key]
+  (search [_ key]
     (letfn [(lookup-seq [node elems]
               (if (empty? elems)
-                (:is-end node)  ;; Возвращаем флаг окончания ключа
+                (:is-end node)
                 (let [next-node (get-in node [:children (first elems)])]
                   (if next-node
                     (lookup-seq next-node (rest elems))
                     false))))]  ;; Если узел не найден, возвращаем false
       (lookup-seq root key)))
 
-  ;; Удаление ключа из дерева
   (delete [this key]
     (if (empty? (:children root))
       ;; Если дерево пустое, возвращаем его без изменений
       this
       (letfn [(remove-seq [node elems]
                 (if (empty? elems)
-                  (assoc node :is-end false)  ;; Убираем флаг конца ключа
+                  (assoc node :is-end false)
                   (let [elem (first elems)
                         next-node (get-in node [:children elem])]
                     (if next-node
                       (let [updated-node (remove-seq next-node (rest elems))]
                         (if (and (not (:is-end updated-node))
                                  (empty? (:children updated-node)))
-                          (update node :children dissoc elem)  ;; Удаляем узел, если он пуст
+                          (update node :children dissoc elem)
                           (assoc-in node [:children elem] updated-node)))
                       node))))]
         (PrefixTreeDictionary. (remove-seq root key)))))
 
-  ;; Получение всех ключей
   (trie-keys [_]
     (letfn [(collect-keys [node prefix]
               (let [current-keys (if (:is-end node) [prefix] [])  ;; Ключи хранятся в виде коллекций
@@ -64,7 +61,7 @@
                                           (:children node))]
                 (concat current-keys children-keys)))]
       (collect-keys root [])))
-  (left [this]
+  (left [_]
     (letfn [(collect-keys [node prefix]
               (if (nil? node)
                 []
@@ -75,8 +72,7 @@
                   (concat children-keys current-keys))))]
       (collect-keys root [])))
 
-  ;; Правый обход (сверху вниз)
-  (right [this]
+  (right [_]
     (letfn [(collect-keys [node prefix]
               (if (nil? node)
                 []
@@ -86,19 +82,21 @@
                                             (:children node))]
                   (concat current-keys children-keys))))]
       (collect-keys root [])))
-  ;; Получение всех пар ключ-флаг
   (entries [_]
     (letfn [(collect-entries [node prefix]
               (if (nil? node)
-                [] ;; Если узел nil, возвращаем пустой список
-                (let [current-entry (if (:is-end node) [[prefix true]] [])  ;; Ключи в виде коллекций
+                []
+                (let [current-entry (if (:is-end node) [[prefix true]] [])
                       children-entries (mapcat (fn [[elem child]]
                                                  (collect-entries child (conj prefix elem)))
                                                (:children node))]
                   (concat current-entry children-entries))))]
       (collect-entries root [])))
-
-  ;; Функция для объединения двух деревьев через вставку ключей
+  (compare-tries [tree1 tree2]
+    (let [keys1 (trie-keys tree1)
+          keys2 (trie-keys tree2)]
+      (and (= (count keys1) (count keys2))
+           (every? #(and (search tree1 %) (search tree2 %)) keys1))))
   (merge-tries [this other]
     (let [other-keys (trie-keys other)]
       (reduce (fn [tree key]
