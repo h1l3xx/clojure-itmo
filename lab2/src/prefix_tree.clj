@@ -9,7 +9,9 @@
   (delete [this key] "Удалить ключ из словаря")
   (trie-keys [this] "Вернуть все ключи")
   (entries [this] "Вернуть все пары ключ-флаг")
-  (merge-tries [this other] "Объединить два префиксных дерева"))
+  (merge-tries [this other] "Объединить два префиксных дерева")
+  (left [this] "Левый обход (снизу вверх)")
+  (right [this] "Правый обход (сверху вниз)"))
 
 (deftype PrefixTreeDictionary [root]
   IDictionary
@@ -62,7 +64,28 @@
                                           (:children node))]
                 (concat current-keys children-keys)))]
       (collect-keys root [])))
+  (left [this]
+    (letfn [(collect-keys [node prefix]
+              (if (nil? node)
+                []
+                (let [current-keys (if (:is-end node) [(apply str (concat prefix))] [])
+                      children-keys (mapcat (fn [[char child]]
+                                              (collect-keys child (conj prefix char)))
+                                            (:children node))]
+                  (concat children-keys current-keys))))]
+      (collect-keys root [])))
 
+  ;; Правый обход (сверху вниз)
+  (right [this]
+    (letfn [(collect-keys [node prefix]
+              (if (nil? node)
+                []
+                (let [current-keys (if (:is-end node) [(apply str (concat prefix))] [])
+                      children-keys (mapcat (fn [[char child]]
+                                              (collect-keys child (conj prefix char)))
+                                            (:children node))]
+                  (concat current-keys children-keys))))]
+      (collect-keys root [])))
   ;; Получение всех пар ключ-флаг
   (entries [_]
     (letfn [(collect-entries [node prefix]
@@ -82,4 +105,3 @@
                 (insert tree key))
               this
               other-keys))))
-
