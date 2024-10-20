@@ -14,7 +14,7 @@
 (deftype PrefixTreeDictionary [root]
   IDictionary
   ;; Вставка ключа в префиксное дерево
-  (insert [this key]
+  (insert [_ key]
     (letfn [(insert-seq [node elems]
               (if (empty? elems)
                 (assoc node :is-end true)  ;; Устанавливаем флаг конца ключа
@@ -24,7 +24,7 @@
       (PrefixTreeDictionary. (insert-seq root key))))
 
   ;; Проверка наличия ключа в префиксное дерево
-  (lookup [this key]
+  (lookup [_ key]
     (letfn [(lookup-seq [node elems]
               (if (empty? elems)
                 (:is-end node)  ;; Возвращаем флаг окончания ключа
@@ -54,7 +54,7 @@
         (PrefixTreeDictionary. (remove-seq root key)))))
 
   ;; Получение всех ключей
-  (trie-keys [this]
+  (trie-keys [_]
     (letfn [(collect-keys [node prefix]
               (let [current-keys (if (:is-end node) [prefix] [])  ;; Ключи хранятся в виде коллекций
                     children-keys (mapcat (fn [[elem child]]
@@ -64,7 +64,7 @@
       (collect-keys root [])))
 
   ;; Получение всех пар ключ-флаг
-  (entries [this]
+  (entries [_]
     (letfn [(collect-entries [node prefix]
               (if (nil? node)
                 [] ;; Если узел nil, возвращаем пустой список

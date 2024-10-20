@@ -3,19 +3,18 @@
             [clojure.test.check]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer [defspec]]
             [prefix-tree :refer :all])
   (:import (prefix_tree PrefixTreeDictionary)))
 
 (def key-gen
   (gen/vector (gen/one-of [gen/int gen/string-alphanumeric]) 1 5))
 
-(defspec test-insert-and-lookup 100
+(deftest test-insert-and-lookup 100
   (prop/for-all [keys (gen/vector key-gen 3 10)]
     (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)]
       (every? #(lookup tree %) keys))))
 
-(defspec test-delete-existing-key 100
+(deftest test-delete-existing-key 100
   (prop/for-all [keys (gen/vector key-gen 3 10)]
     (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
           key-to-delete (first keys)
@@ -23,7 +22,7 @@
       (and (not (lookup tree-after-delete key-to-delete))
            (every? #(lookup tree-after-delete %) (rest keys))))))
 
-(defspec test-delete-nonexistent-key 100
+(deftest test-delete-nonexistent-key 100
   (prop/for-all [keys (gen/vector key-gen 3 10)
                  non-existent-key key-gen]
     (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
@@ -31,12 +30,12 @@
       (and (every? #(lookup tree-after-delete %) keys)
            (not (lookup tree-after-delete non-existent-key))))))
 
-(defspec test-trie-keys 100
+(deftest test-trie-keys 100
   (prop/for-all [keys (gen/vector key-gen 3 10)]
     (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)]
       (= (set (trie-keys tree)) (set keys)))))
 
-(defspec test-merge-with-tree 100
+(deftest test-merge-with-tree 100
   (prop/for-all [keys1 (gen/vector key-gen 3 10)
                  keys2 (gen/vector key-gen 3 10)]
     (let [tree1 (reduce insert (PrefixTreeDictionary. (create-node)) keys1)
@@ -44,7 +43,7 @@
           merged-tree (merge-tries tree1 tree2)]
       (= (set (trie-keys merged-tree)) (set (concat keys1 keys2))))))
 
-(defspec test-delete-empty-tree -100
+(deftest test-delete-empty-tree -100
   (prop/for-all [key-to-delete key-gen]
     (let [empty-tree (PrefixTreeDictionary. (create-node))
           tree-after-delete (delete empty-tree key-to-delete)]
