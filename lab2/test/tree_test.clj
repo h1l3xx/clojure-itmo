@@ -15,26 +15,41 @@
 (def symbol-seq-gen
   (gen/vector (gen/fmap #(symbol (str %)) (gen/elements (map char (range 97 123)))) 1 5))
 
+(deftest test-create-prefix-tree-from-seq
+  (testing
+   (let [property (prop/for-all [keys (gen/vector string-gen 1 10)]
+                                (let [trie (create-prefix-tree keys)]
+                                  (every? (fn [key] (.search trie key)) keys)))]
+     (is (clojure.test.check/quick-check 100 property))))
+
+  (testing
+   (let [property (prop/for-all [keys (gen/vector string-gen 1 10)
+                                 missing-key string-gen]
+                                (let [trie (create-prefix-tree keys)]
+                                  (and (not (.search trie missing-key))
+                                       (every? (fn [key] (.search trie key)) keys))))]
+     (is (clojure.test.check/quick-check 100 property)))))
+
 (deftest test-insert-and-search 100
-                                (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
-                                  (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)]
-                                    (every? #(search tree %) keys))))
+  (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
+                (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)]
+                  (every? #(search tree %) keys))))
 
 (deftest test-delete-existing-key 100
-                                  (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
-                                    (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
+  (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
+                (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
                       key-to-delete (first keys)
                       tree-after-delete (delete tree key-to-delete)]
-                                      (and (not (search tree-after-delete key-to-delete))
-                                           (every? #(search tree-after-delete %) (rest keys))))))
+                  (and (not (search tree-after-delete key-to-delete))
+                       (every? #(search tree-after-delete %) (rest keys))))))
 
 (deftest test-delete-nonexistent-key 100
-                                     (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])
+  (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])
                  non-existent-key (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
-                                       (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
+                (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
                       tree-after-delete (delete tree non-existent-key)]
-                                         (and (every? #(search tree-after-delete %) keys)
-                                              (not (search tree-after-delete non-existent-key))))))
+                  (and (every? #(search tree-after-delete %) keys)
+                       (not (search tree-after-delete non-existent-key))))))
 
 (deftest test-trie-keys 100
   (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]

@@ -10,12 +10,11 @@
   (trie-keys [this] "Вернуть все ключи")
   (entries [this] "Вернуть все пары ключ-флаг")
   (merge-tries [this other] "Объединить два префиксных дерева")
-  (left [this] "Левый обход (снизу вверх)")
-  (right [this] "Правый обход (сверху вниз)")
-  (compare-tries [this other] "Сравнение двух деревьев"))
+  (compare-tries [this other] "Сравнение двух деревьев")
+  (fold-left [this f] "Сложение элементов с левым обходом")
+  (fold-right [this f] "Сложение элементов с правым обходом"))
 
-(deftype PrefixTreeDictionary [root]
-  IDictionary
+(deftype PrefixTreeDictionary [root] IDictionary
   (insert [_ key]
     (letfn [(insert-seq [node elems]
               (if (empty? elems)
@@ -37,7 +36,6 @@
 
   (delete [this key]
     (if (empty? (:children root))
-      ;; Если дерево пустое, возвращаем его без изменений
       this
       (letfn [(remove-seq [node elems]
                 (if (empty? elems)
@@ -61,45 +59,48 @@
                                           (:children node))]
                 (concat current-keys children-keys)))]
       (collect-keys root [])))
-  (left [_]
-    (letfn [(collect-keys [node prefix]
-              (if (nil? node)
-                []
-                (let [current-keys (if (:is-end node) [(apply str (concat prefix))] [])
-                      children-keys (mapcat (fn [[char child]]
-                                              (collect-keys child (conj prefix char)))
-                                            (:children node))]
-                  (concat children-keys current-keys))))]
-      (collect-keys root [])))
 
-  (right [_]
-    (letfn [(collect-keys [node prefix]
-              (if (nil? node)
-                []
-                (let [current-keys (if (:is-end node) [(apply str (concat prefix))] [])
-                      children-keys (mapcat (fn [[char child]]
-                                              (collect-keys child (conj prefix char)))
-                                            (:children node))]
-                  (concat current-keys children-keys))))]
-      (collect-keys root [])))
   (entries [_]
     (letfn [(collect-entries [node prefix]
-              (if (nil? node)
-                []
-                (let [current-entry (if (:is-end node) [[prefix true]] [])
+              (if (nil? node) []
+                (let [current-entry (if (:is-end node) [[(apply str prefix) true]] [])
                       children-entries (mapcat (fn [[elem child]]
                                                  (collect-entries child (conj prefix elem)))
                                                (:children node))]
                   (concat current-entry children-entries))))]
       (collect-entries root [])))
+
   (compare-tries [tree1 tree2]
     (let [keys1 (trie-keys tree1)
           keys2 (trie-keys tree2)]
       (and (= (count keys1) (count keys2))
            (every? #(and (search tree1 %) (search tree2 %)) keys1))))
+
   (merge-tries [this other]
     (let [other-keys (trie-keys other)]
       (reduce (fn [tree key]
                 (insert tree key))
               this
-              other-keys))))
+              other-keys)))
+
+  (fold-left [this f]
+    (let [words (trie-keys this)
+          result (reduce f [] words)]
+      (reduce (fn [trie key]
+                (.insert trie key))
+              (PrefixTreeDictionary. (create-node))
+              result)))
+
+  (fold-right [this f]
+    (let [words (reverse (trie-keys this))
+          result (reduce f [] words)]
+      (reduce (fn [trie key]
+                (.insert trie key))
+              (PrefixTreeDictionary. (create-node))
+              result))))
+
+(defn create-prefix-tree [keys]
+  (reduce (fn [trie key]
+            (.insert trie key))
+          (PrefixTreeDictionary. (create-node))
+          keys))
