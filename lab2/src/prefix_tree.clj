@@ -12,7 +12,8 @@
   (merge-tries [this other] "Объединить два префиксных дерева")
   (compare-tries [this other] "Сравнение двух деревьев")
   (fold-left [this f] "Сложение элементов с левым обходом")
-  (fold-right [this f] "Сложение элементов с правым обходом"))
+  (fold-right [this f] "Сложение элементов с правым обходом")
+  (filter-keys [this predicate]))
 
 (deftype PrefixTreeDictionary [root] IDictionary
   (insert [_ key]
@@ -97,7 +98,18 @@
       (reduce (fn [trie key]
                 (.insert trie key))
               (PrefixTreeDictionary. (create-node))
-              result))))
+              result)))
+  (filter-keys [_ pred]
+    (letfn [(collect-filtered-keys [node prefix]
+              (let [current-key (apply str prefix)
+                    current-keys (if (and (:is-end node) (pred current-key))
+                                   [current-key]
+                                   [])
+                    children-keys (mapcat (fn [[elem child]]
+                                            (collect-filtered-keys child (conj prefix elem)))
+                                          (:children node))]
+                (concat current-keys children-keys)))]
+      (collect-filtered-keys root []))))
 
 (defn create-prefix-tree [keys]
   (reduce (fn [trie key]

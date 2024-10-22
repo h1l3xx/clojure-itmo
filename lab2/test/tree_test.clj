@@ -35,6 +35,15 @@
                 (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)]
                   (every? #(search tree %) keys))))
 
+(deftest test-filter-keys
+  (let [trie (create-prefix-tree ["cat" "car" "dog" "cart" "apple"])]
+    (is (= (sort (filter-keys trie #(clojure.string/starts-with? % "ca")))
+           ["car" "cart" "cat"]))
+    (is (= (sort (filter-keys trie #(= (count %) 3)))
+           ["car" "cat" "dog"]))
+    (is (= (sort (filter-keys trie #(clojure.string/ends-with? % "e")))
+           ["apple"]))))
+
 (deftest test-delete-existing-key 100
   (prop/for-all [keys (gen/one-of [string-gen number-seq-gen symbol-seq-gen])]
                 (let [tree (reduce insert (PrefixTreeDictionary. (create-node)) keys)
