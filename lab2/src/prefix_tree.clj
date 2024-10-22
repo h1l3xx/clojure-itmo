@@ -13,7 +13,7 @@
   (compare-tries [this other] "Сравнение двух деревьев")
   (fold-left [this f] "Сложение элементов с левым обходом")
   (fold-right [this f] "Сложение элементов с правым обходом")
-  (filter-keys [this predicate]))
+  (filter-keys [this predicate]) "Фильтрация дерева по предикату")
 
 (deftype PrefixTreeDictionary [root] IDictionary
   (insert [_ key]
