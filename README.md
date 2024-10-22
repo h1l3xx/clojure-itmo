@@ -9,7 +9,7 @@
 В ходе выполнения данной лабораторной работы, мною был реализован протокол ```IDictionary```, а также самое префиксное дерево ```PrefixTreeDictionary```, расширяющее функции протокола.
 
 ```clojure
-(defprotocol IDictionary 
+(defprotocol IDictionary
   (insert [this key] "Добавить ключ в словарь")
   (search [this key] "Проверить, существует ли ключ в словаре")
   (delete [this key] "Удалить ключ из словаря")
@@ -18,7 +18,8 @@
   (merge-tries [this other] "Объединить два префиксных дерева")
   (compare-tries [this other] "Сравнение двух деревьев")
   (fold-left [this f] "Сложение элементов с левым обходом")
-  (fold-right [this f] "Сложение элементов с правым обходом"))
+  (fold-right [this f] "Сложение элементов с правым обходом")
+  (filter-keys [this predicate]) "Фильтрация дерева по предикату")
 ```
 
 ## Функции префиксного дерева
@@ -101,7 +102,7 @@
 - Собирает все префиксы, которые помечены как завершённые ключи (с флагом `:is-end` `true`).
 - Рекурсивно проходит по всем узлам, собирая ключи.
 
-### Поиск слова (search)
+### Фильтрация (filter)
 ```clojure
 (filter-keys [_ pred]
     (letfn [(collect-filtered-keys [node prefix]
