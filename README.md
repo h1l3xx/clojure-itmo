@@ -101,6 +101,23 @@
 - Собирает все префиксы, которые помечены как завершённые ключи (с флагом `:is-end` `true`).
 - Рекурсивно проходит по всем узлам, собирая ключи.
 
+### Поиск слова (search)
+```clojure
+(filter-keys [_ pred]
+    (letfn [(collect-filtered-keys [node prefix]
+              (let [current-key (apply str prefix)
+                    current-keys (if (and (:is-end node) (pred current-key))
+                                   [current-key]
+                                   [])
+                    children-keys (mapcat (fn [[elem child]]
+                                            (collect-filtered-keys child (conj prefix elem)))
+                                          (:children node))]
+                (concat current-keys children-keys)))]
+      (collect-filtered-keys root []))))
+```
+Принимает предикат `pred` и возвращает все ключи из префиксного дерева, удовлетворяющие этому предикату.
+
+
 ### Левая свертка (left)
 ```clojure
 (fold-left [this f]
