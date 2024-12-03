@@ -12,11 +12,11 @@
         (if (seq input-line)
           (let [parsed-point (parse-point input-line)
                 updated-points (conj points parsed-point)
-                sorted-points (if (not (apply <= (map first updated-points)))
-                                (do
-                                  (println "Данные не отсортированы. Выполняется сортировка.")
-                                  (sort-by first updated-points))
-                                updated-points)]
+                sorted-points (if (every? (fn [[x1 x2]] (<= x1 x2)) (partition 2 1 (map first updated-points)))
+                                      updated-points
+                                      (do
+                                        (println "Данные не отсортированы. Выполняется сортировка.")
+                                        (sort-by first updated-points)))]
 
             (when (>= (count sorted-points) 2)
               (when (or (= method "linear") (= method "both"))
