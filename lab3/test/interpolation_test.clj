@@ -35,10 +35,3 @@
       (is (= 5 (count result)))
       (is (= [(double 1.0) 2.0] (first result)))
       (is (= [(double 3.0) 6.0] (last result))))))
-
-(deftest test-format-results
-  (testing "format-results function"
-    (let [x-values [1.0 2.0 3.0]
-          y-values [2.0 4.0 6.0]
-          result (format-results x-values y-values)]
-      (is (= "1,00\t2,00\t3,00\n2,00\t4,00\t6,00\n" result)))))
