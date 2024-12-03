@@ -70,15 +70,10 @@
 ### Линейная интерполяция
 
 ```clojure
-(defn interpolate-linear [data step-size]
-      (let [[point1 point2] data
-            [x1 y1] point1
-            [x2 y2] point2
-            x-range (range x1 (+ x2 step-size) step-size)]
-           (map (fn [x]
-                    (let [factor (/ (- x x1) (- x2 x1))]
-                         [(double x) (+ y1 (* factor (- y2 y1)))]))
-                x-range)))
+(defn interpolate-linear [[ [x1 y1] [x2 y2] ] step-size]
+      (map (fn [x]
+               [(double x) (+ y1 (* (/ (- x x1) (- x2 x1)) (- y2 y1)))])
+           (range x1 (+ x2 step-size) step-size)))
 
 ```
 Выполняет линейную интерполяцию для заданной точки x на основе двух известных точек.
@@ -86,24 +81,22 @@
 
 ```clojure
 (defn lagrange [data x]
-      (let [n (count data)]
-           (reduce
-             (fn [acc i]
-                 (let [[xi yi] (nth data i)
-                       term (reduce (fn [prod j]
-                                        (if (not= i j)
-                                          (let [[xj _] (nth data j)]
-                                               (* prod (/ (- x xj) (- xi xj))))
-                                          prod))
-                                    1
-                                    (range n))]
-                      (+ acc (* term yi))))
-             0
-             (range n))))
+      (reduce
+         (fn [accum [xi yi]]
+             (let [term (reduce
+                           (fn [prod [xj _]]
+                               (if (not= xi xj)
+                                  (* prod (/ (- x xj) (- xi xj)))
+                                  prod))
+                           1
+                           data)]
+                  (+ accum (* term yi))))
+         0
+         data))
 
 (defn interpolate-lagrange [data step start end]
-      (let [x-range (range start (+ end step) step)]
-           (map #(vector % (lagrange data %)) x-range)))
+      (for [x (range start (+ end step) step)]
+           [x (lagrange data x)]))
 ```
 
 ## Ввод/вывод программы
