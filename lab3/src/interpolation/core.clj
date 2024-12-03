@@ -25,8 +25,7 @@
                         linear-result (interpolate-linear window step-size)
                         x-values (map first linear-result)
                         y-values (map second linear-result)]
-                    (println (format "Линейная интерполяция:"
-                                     (first x-values) (last x-values)))
+                    (println "Линейная интерполяция:" (first x-values) (last x-values))
                     (println (format-results x-values y-values)))))
 
               (doseq [group (partition window-size 1 sorted-points)]
@@ -35,8 +34,7 @@
                       lagrange-result (interpolate-lagrange group step-size start finish)
                       x-values (map first lagrange-result)
                       y-values (map second lagrange-result)]
-                  (println (format "Интерполяционный многочлен Лагранжа:"
-                                   start finish))
+                  (println "Интерполяционный многочлен Лагранжа:" start finish)
                   (println (format-results x-values y-values))))
 
               (recur sorted-points))
