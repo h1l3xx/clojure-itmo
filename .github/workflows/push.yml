@@ -27,10 +27,10 @@ jobs:
       - name: Check format
         run: cljfmt check
 
-      - name: Lint lab2
-        run: clj-kondo --lint lab2/src
+      - name: Lint lab3
+        run: clj-kondo --lint lab3/src
 
-      - name: Test Lab2
+      - name: Test Lab3
         run: |
-          cd lab2
+          cd lab3
           clojure -X:test
